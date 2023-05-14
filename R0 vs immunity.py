@@ -58,7 +58,7 @@ class Parameterize_ODE():
             dIr2dt = betaR2*R1*Ir2/N + betaR2*R1*I2/N - gamma*Ir2 - mu*Ir2
             dR1dt = gamma*I1 - betaR2*R1*Ir2/N - betaR2*R1*I2/N - rho*R1 + tau*rho*R12 - mu*R1
             dR2dt = gamma*I2 - betaR1*R2*Ir1/N - betaR1*R2*I1/N - tau*rho*R2 + rho*R12 - mu*R2  
-            dR12dt = gamma*Ir1 + gamma*Ir2 - mu*R12 - rho*R12*2    
+            dR12dt = gamma*Ir1 + gamma*Ir2 - mu*R12 - rho*R12 - tau*rho*R12    
          
         return[dSdt, dI1dt, dI2dt, dIr1dt, dIr2dt, dR1dt, dR2dt, dR12dt] #return new set of equations
         
@@ -71,27 +71,12 @@ class Parameterize_ODE():
         t0 = t[0]
         tf = t[-1]
         
-        #y = C1, Ct, T, CtT, Cint
         y0 = [self.S0, self.I10, self.I20, self.Ir10, self.Ir20, self.R10, self.R20, self.R120]
         solarray = solve_ivp(self.sirodes, (t0, tf), y0, t_eval = t, method = 'BDF', args = (p,))
 
 
         return solarray
 
-    def solvesirodes(self, t, p): #changed from solvepeptideodes to solvesirodes
-        
-        #Solver for ODEs
-
-        t0 = t[0]
-        tf = t[-1]
-        
-        #y = C1, Ct, T, CtT, Cint
-        y0 = [self.S0, self.I10, self.I20, self.R10, 0, 0, 0, 0, 0, 0, 0]
-        solarray = solve_ivp(self.sirodes, (t0, tf), y0, t_eval = t, method = 'BDF', args = (p,))
-
-
-        return solarray        
-    
 
 #Parameter estimates
 mu = .00002466 #births per person / day
@@ -164,13 +149,13 @@ def multisensitivity(paramx, minx, maxx, paramy, miny, maxy, p0, scenario, outco
             if scenario == 1:
                 #set cross-immunity parameters to be equal
                 p[3] = p[2]
-            else: 
-                #run model
-                po = Parameterize_ODE(S0, I10, I20, Ir10, Ir20, R10, R20, R120) 
-                infected = po.solvesirodes(xt, p).y 
-                infectedStrain1 = infected[1,:] + infected[3,:]
-                infectedStrain2 = infected[2,:] + infected[4,:]
-                totalinfected = infectedStrain1 + infectedStrain2
+                
+            #run model
+            po = Parameterize_ODE(S0, I10, I20, Ir10, Ir20, R10, R20, R120) 
+            infected = po.solvesirodes(xt, p).y 
+            infectedStrain1 = infected[1,:] + infected[3,:]
+            infectedStrain2 = infected[2,:] + infected[4,:]
+            totalinfected = infectedStrain1 + infectedStrain2
             
             gamma = p[8]
             N = p[1]
@@ -244,7 +229,12 @@ def multisensitivity(paramx, minx, maxx, paramy, miny, maxy, p0, scenario, outco
         pp.xlabel(params_list[paramx])
         pp.xlim((prangex[0], prangex[-1]))
         pp.ylim((prangey[0], prangey[-1]))
-        pp.show()
+        if scenario == 1:
+            pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig2.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+        elif scenario == 2:
+            pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig4.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+        else:
+            pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig6.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
     
     else:
         vmin = np.min([np.min(Outcomearray), np.min(Outcomearray2), np.min(Outcomearray3)])
@@ -280,19 +270,60 @@ def multisensitivity(paramx, minx, maxx, paramy, miny, maxy, p0, scenario, outco
                           "SS yearly fraction of population infected with Invader strain",
                           "SS yearly fraction of population infected"]
                 pp.title(titles[i])
+                if scenario == 1:
+                    if i == 0:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig3D.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    elif i == 1:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig3E.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    else:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig3F.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                elif scenario == 2:
+                    if i == 0:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig5D.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    elif i == 1:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig5E.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    else:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig5F.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                else:
+                    if i == 0:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/FigS1D.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    elif i == 1:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/FigS1E.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    else:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/FigS1F.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
             if outcome == 'short term':
                 titles = ["Fraction of population infected with Original strain in 6 mo",
                           "Fraction of population infected with Invader strain in 6 mo",
                           "Fraction of population infected in 6 mo"]
                 pp.title(titles[i])
-            pp.show()
+                if scenario == 1:
+                    if i == 0:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig3A.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    elif i == 1:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig3B.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    else:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig3C.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                elif scenario == 2:
+                    if i == 0:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig5A.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    elif i == 1:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig5B.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    else:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/Fig5C.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                else:
+                    if i == 0:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/FigS1A.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    elif i == 1:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/FigS1B.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
+                    else:
+                        pp.savefig("C:/Users/amper/Desktop/work/R0 vs immunity/R0 vs immunity figures/FigS1C.tiff", dpi=600, facecolor='w', edgecolor='w',pad_inches=0.)
 
 
 PO = Parameterize_ODE(S0, I10, I20, Ir10, Ir20, R10, R20, R120)
 
 t = np.arange(0, 3650, .01)
 psol = PO.solvesirodes(t, p0).y
-
+#QC figure to test steady-state initial conditions
 #pp.plot(t, psol[0,:])
 pp.plot(t, psol[1,:]) 
 pp.plot(t, psol[2,:])
